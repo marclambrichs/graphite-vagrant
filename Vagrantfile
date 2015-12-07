@@ -43,20 +43,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.hostmanager.ignore_private_ip = false
   config.hostmanager.include_offline = true
 
-  ##############################################################################
-  # Change hosts file, both on clients and host
-  ##############################################################################
-#  if Vagrant.has_plugin?("vagrant-triggers")
-#    {
-#      :up => PUPPETAPPLY,
-#    }.each do |command, trigger|
-#        config.trigger.after command, :stdout => true do
-#          info "Executing #{command} action on the VirtualBox tied VM..."
-#          run  "vagrant ssh #{puppetmaster} -c '#{trigger}'"
-#        end
-#    end
-#  end
-
   servers.each do |server|
     config.vm.provision :hosts do |provisioner|
       provisioner.add_host '10.0.11.2', ['puppet.arthurjames.vagrant']
