@@ -1,0 +1,6 @@
+---
+- name: graphite
+  hostname: graphite.arthurjames.vagrant
+  box: centos-7-x86_64
+  ram: 2048
+  ip: 10.0.11.5
