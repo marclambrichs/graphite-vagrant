@@ -20,19 +20,6 @@ end
 # Read YAML file with box details
 servers = YAML.load_file('config/servers.yaml')
 
-################################################################################
-# define puppetmaster
-################################################################################
-puppetmaster = "puppet.arthurjames.vagrant"
-
-################################################################################
-# define puppet apply
-################################################################################
-default_env = 'production'
-ext_env     = ENV['VAGRANT_PUPPET_ENV']
-env         = ext_env ? ext_env : default_env
-PUPPETAPPLY = "puppet apply --verbose --hiera_config /etc/puppet/hiera.yaml --modulepath=/etc/puppet/environments/#{env}/modules /vagrant/puppet/manifests/default.pp"
-
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   ##############################################################################
@@ -48,11 +35,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       provisioner.add_host '10.0.11.2', ['puppet.arthurjames.vagrant']
     end
 
-    config.vm.provision "puppet_server" do |puppet|
-      puppet.puppet_server = "puppet.arthurjames.vagrant"
-      puppet.puppet_node   = server["hostname"]
-      puppet.options       = "--verbose --debug"
-    end
 
     config.vm.define server["name"] do |srv|
       config.vm.hostname                = server["hostname"]
@@ -63,8 +45,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         vb.customize [
            'modifyvm', :id,
            '--groups', '/Monitoring',
+           '--natdnshostresolver1', 'on',
            '--memory', server["ram"]
-      ]
+        ]
       end
   
       config.vm.network "private_network", ip: server["ip"]
@@ -73,6 +56,20 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           srv.vm.network "forwarded_port", host_ip: "127.0.0.1", guest: port["guest"], host: port["host"]
         end
       end
+
+      # Install local repo
+#      srv.vm.provision :shell, :inline => <<-SHELL
+#        yum -y install createrepo
+#        cp /vagrant/files/local.repo /etc/yum.repos.d/
+#        chown -R root:root /vagrant/files/local
+#        createrepo /vagrant/files/local
+#      SHELL
+    end
+
+    config.vm.provision "puppet_server" do |puppet|
+      puppet.puppet_server = "puppet.arthurjames.vagrant"
+      puppet.puppet_node   = server["hostname"]
+      puppet.options       = "--verbose --debug"
     end
   end
 end
